@@ -65,10 +65,6 @@ def remove_seeds_from_name(name_with_seed: str) -> str:
     # Remove [1]
     name = re.sub(r"\[\d\]", "", name)
 
-    name_length = len(name)
-    half_name_length = round(len(name) / 2) - 1
-    name = name[0:half_name_length]
-
     # Remove whitespace at the end
     name = re.sub(r"\s+$", "", name)
     return name
