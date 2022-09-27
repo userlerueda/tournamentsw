@@ -15,7 +15,6 @@ from tabulate import tabulate
 
 from tsw import TSW
 from tsw.settings import Settings
-from tsw.util import ccp_date_to_utr_date
 
 LOGGER = daiquiri.getLogger(__name__)
 
