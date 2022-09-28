@@ -77,7 +77,14 @@ class TestUtilities:
     @pytest.mark.parametrize(
         "name_with_seed, name",
         [
-            ("Pedro Gutiérrez Pedro Gutiérrez [5/8]  ", "Pedro Gutiérrez"),
+            (
+                "Pedro Gutiérrez Pedro Gutiérrez [5/8]  ",
+                "Pedro Gutiérrez Pedro Gutiérrez",
+            ),
+            (
+                "Manuel Orozco [1]	",
+                "Manuel Orozco",
+            ),
         ],
     )
     def test_remove_seeds_from_name(self, name_with_seed, name):
