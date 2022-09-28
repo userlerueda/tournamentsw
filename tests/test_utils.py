@@ -61,6 +61,8 @@ class TestUtilities:
             ("""<span>6-7(5)</span>""", [[6, 7, 5]]),
             ("""<span>10-2</span>""", [[10, 2]]),
             ("""<span>6-1</span><span>7-6(5)</span>""", [[6, 1], [7, 6, 5]]),
+            ("""Walkover""", ["Walkover"]),
+            ("""Not played""", ["Not played"]),
         ],
     )
     def test_valid_get_score(self, tsw_score, score):

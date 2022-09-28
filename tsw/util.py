@@ -34,8 +34,11 @@ def get_score(tsw_score: list) -> str:
     """Get formatted score."""
     LOGGER.debug("Converting TSW score '%s", tsw_score)
     score_array = []
-    for set_score in tsw_score.findAll("span", recursive=False):
-        score_array.append(dashed_score_to_score(set_score.contents[0]))
+    if tsw_score.findAll("span", recursive=False):
+        for set_score in tsw_score.findAll("span", recursive=False):
+            score_array.append(dashed_score_to_score(set_score.contents[0]))
+    else:
+        score_array = tsw_score.contents
     return score_array
 
 
