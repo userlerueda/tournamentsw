@@ -5,6 +5,8 @@ __email__ = "userlerueda@gmail.com"
 __maintainer__ = "Luis Rueda <userlerueda@gmail.com>"
 
 import re
+from collections import OrderedDict
+from typing import Dict, List
 
 import daiquiri
 import pandas as pd
@@ -38,7 +40,41 @@ class TSW(object):
         }
         self.session.post(cookie_url, params=params)
 
-    def get_matches(self, tournament_id: int, draw_id: int) -> dict:
+    def get_all_matches(
+        self,
+        tournament_id: str,
+        draw_types: List = ["Elimination"],
+        include_country: bool = False,
+    ) -> Dict:
+        """Get All Matches for a Tournament."""
+
+        all_matches = []
+        events = self.get_events(tournament_id)
+        for event in events:
+            draws = self.get_draws(tournament_id, event["id"])
+            for draw in draws:
+                if draw["Type"] in draw_types:
+                    matches = self.get_matches(tournament_id, draw["id"])
+                    for match in matches:
+                        ordered_match = OrderedDict()
+                        ordered_match["Category"] = event["Name"]
+                        ordered_match["Timestamp"] = match["Timestamp"]
+                        ordered_match["Winner Name"] = match["Winner Name"]
+                        if include_country:
+                            ordered_match["Winner Country"] = match[
+                                "Winner Country"
+                            ]
+                        ordered_match["Loser Name"] = match["Loser Name"]
+                        if include_country:
+                            ordered_match["Loser Country"] = match[
+                                "Loser Country"
+                            ]
+                        ordered_match["Score"] = match["Score"]
+
+                        all_matches.append(ordered_match)
+        return all_matches
+
+    def get_matches(self, tournament_id: str, draw_id: int) -> Dict:
         """Get Matches for a Draw of an Event."""
         uri = f"/drawmatches.aspx"
         url = f"{self.url}{uri}"

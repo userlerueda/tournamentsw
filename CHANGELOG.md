@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Adds option to get all matches via method (@userlerueda)
 - Adds tests with pytest to CI pipeline (@userlerueda)
 
 ## v0.1.2

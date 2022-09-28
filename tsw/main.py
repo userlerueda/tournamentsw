@@ -48,12 +48,15 @@ def cli(ctx, log_level: str):
 @click.pass_context
 @click.argument("tournament_id")
 @click.argument("draw_id")
-def matches(ctx, tournament_id, draw_id):
+def matches(ctx, tournament_id: str, draw_id: str):
     """Matches Subcommand"""
 
     LOGGER.debug("Getting matches for draw with id: '%s'", draw_id)
-    my_tsw = ctx.obj["my_tsw"]
-    df = my_tsw.get_matches(tournament_id, draw_id)
+    my_tsw: TSW = ctx.obj["my_tsw"]
+    if draw_id == "all":
+        df = my_tsw.get_all_matches(tournament_id)
+    else:
+        df = my_tsw.get_matches(tournament_id, draw_id)
     print(tabulate(df, headers="keys", tablefmt="psql", showindex=False))
 
 
