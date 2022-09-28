@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from tsw.util import (
     dashed_score_to_score,
     get_country,
+    get_parameters,
     get_score,
     remove_seeds_from_name,
 )
@@ -34,28 +35,43 @@ class TestUtilities:
 
         assert country == get_country(tsw_country)
 
-    # @pytest.mark.parametrize(
-    #     "tsw_score, score",
-    #     [
-    #         (
-    #             """<span class="score"><span>6-3</span><span>6-3</span></span>""",
-    #             [[6, 3], [6, 2]],
-    #         ),
-    #         (
-    #             """<span class="score"><span>6-0</span><span>6-0</span></span>""",
-    #             [[6, 0], [6, 0]],
-    #         ),
-    #     ],
-    # )
-    # def test_valid_get_score(self, tsw_score, score):
-    #     """
-    #     Test valid get_score
-    #     """
+    @pytest.mark.parametrize(
+        "url, parameters",
+        [
+            (
+                "player.aspx?id=9F5BD1DA-4C25-43D8-B534-42D7BF84A2B3&player=229",
+                {
+                    "id": ["9F5BD1DA-4C25-43D8-B534-42D7BF84A2B3"],
+                    "player": ["229"],
+                },
+            ),
+        ],
+    )
+    def test_get_parameters(self, url, parameters):
+        """
+        Test get_parameters
+        """
 
-    #     soup = BeautifulSoup(tsw_score, "html.parser")
-    #     print(soup)
+        assert parameters == get_parameters(url)
 
-    #     assert score == get_score(soup)
+    @pytest.mark.parametrize(
+        "tsw_score, score",
+        [
+            ("""<span>6-0</span>""", [[6, 0]]),
+            ("""<span>6-7(5)</span>""", [[6, 7, 5]]),
+            ("""<span>10-2</span>""", [[10, 2]]),
+            ("""<span>6-1</span><span>7-6(5)</span>""", [[6, 1], [7, 6, 5]]),
+        ],
+    )
+    def test_valid_get_score(self, tsw_score, score):
+        """
+        Test valid get_score
+        """
+
+        soup = BeautifulSoup(tsw_score, "html.parser")
+        print(soup)
+
+        assert score == get_score(soup)
 
     @pytest.mark.parametrize(
         "dashed_score, score",
