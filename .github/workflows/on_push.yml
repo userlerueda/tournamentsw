@@ -1,4 +1,4 @@
-name: Test TSW Python Library
+name: Test Python Library
 
 on:
   push:
@@ -42,4 +42,4 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest --cov-report term-missing --cov=tsw tests
+          pytest

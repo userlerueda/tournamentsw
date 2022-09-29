@@ -71,8 +71,6 @@ class TestUtilities:
         """
 
         soup = BeautifulSoup(tsw_score, "html.parser")
-        print(soup)
-
         assert score == get_score(soup)
 
     @pytest.mark.parametrize(
