@@ -5,8 +5,9 @@ __email__ = "userlerueda@gmail.com"
 __maintainer__ = "Luis Rueda <userlerueda@gmail.com>"
 
 import re
+import sys
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Collection, Dict, List
 
 import daiquiri
 import pandas as pd
@@ -15,9 +16,14 @@ from bs4 import BeautifulSoup
 
 from tsw.settings import Settings
 from tsw.util import (
+    calculate_match_date,
+    clean_fixtures,
+    clean_name,
     get_country,
+    get_fixtures_for_draw,
     get_parameters,
     get_score,
+    is_score,
     remove_seeds_from_name,
 )
 
@@ -76,7 +82,7 @@ class TSW(object):
 
     def get_matches(self, tournament_id: str, draw_id: int) -> Dict:
         """Get Matches for a Draw of an Event."""
-        uri = f"/drawmatches.aspx"
+        uri = f"/sport/drawmatches.aspx"
         url = f"{self.url}{uri}"
         params = {
             "id": tournament_id,
@@ -85,6 +91,7 @@ class TSW(object):
         LOGGER.debug("Using URL: %s", url)
         response = self.session.get(url, params=params)
         response.raise_for_status()
+        draw_details = {}
 
         soup = BeautifulSoup(response.text, "html.parser")
         table = soup.find("table")
@@ -154,6 +161,18 @@ class TSW(object):
                     table_count += 1
                 else:
                     pass
+            if timestamp is None:
+                if draw_details == {}:
+                    draw_details = self.get_draw(tournament_id, draw_id)
+                timestamp = calculate_match_date(
+                    {
+                        "winner": winner_name,
+                        "loser": loser_name,
+                        "score": score,
+                        "draw_details": draw_details,
+                    }
+                )
+
             row = [
                 timestamp,
                 winner_country,
@@ -166,9 +185,25 @@ class TSW(object):
 
         return df.to_dict("records")
 
-    def get_draws(self, tournament_id: int, event_id: int) -> dict:
+    def get_draw(self, tournament_id: str, draw_id: int) -> Collection:
+        """Get draw details."""
+        uri = f"/sport/tournament/draw"
+        url = f"{self.url}{uri}"
+        params = {"id": tournament_id, "draw": draw_id}
+        response = self.session.get(url, params=params)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        draw_div = soup.find("div", class_="draw")
+        df = pd.read_html(draw_div.prettify())[0]
+        fixtures = clean_fixtures(get_fixtures_for_draw(df))
+        dates = self.get_tournament_dates(tournament_id)
+        for round_name in list(fixtures.keys()):
+            fixtures[round_name]["date"] = dates[round_name]["date"]
+        return fixtures
+
+    def get_draws(self, tournament_id: str, event_id: int) -> dict:
         """Get Draws for an Event in Tournament."""
-        uri = f"/event.aspx"
+        uri = f"/sport/event.aspx"
         url = f"{self.url}{uri}"
         params = {"id": tournament_id, "event": event_id}
         LOGGER.debug("Using URL: %s", url)
@@ -204,9 +239,9 @@ class TSW(object):
         df = df[col_order]
         return df.to_dict("records")
 
-    def get_events(self, tournament_id: int) -> dict:
+    def get_events(self, tournament_id: str) -> Dict:
         """Get Events for Tournament."""
-        uri = f"/events.aspx"
+        uri = f"/sport/events.aspx"
         url = f"{self.url}{uri}"
         params = {
             "id": tournament_id,
@@ -236,3 +271,25 @@ class TSW(object):
         col_order = ["id", "Name", "Draws", "Entries"]
         df = df[col_order]
         return df.to_dict("records")
+
+    def get_tournament_dates(self, tournament_id: str):
+        """Get tournament dates."""
+        round_dates = {}
+        uri = f"/tournament/{tournament_id}/Matches"
+        url = f"{self.url}{uri}"
+        response = self.session.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        dates = soup.findAll("time")
+        round = 1
+        for date in dates:
+            if round <= len(dates) - 3:
+                round_dates[f"Round {round}"] = {"date": date["datetime"]}
+            elif round == len(dates) - 2:
+                round_dates["Quarter Finals"] = {"date": date["datetime"]}
+            elif round == len(dates) - 1:
+                round_dates["Semi Finals"] = {"date": date["datetime"]}
+            elif round == len(dates):
+                round_dates["Finals"] = {"date": date["datetime"]}
+            round += 1
+        return round_dates

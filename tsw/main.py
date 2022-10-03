@@ -62,6 +62,24 @@ def matches(ctx, tournament_id: str, draw_id: str):
 
 @cli.command()
 @click.pass_context
+@click.argument("tournament-id")
+@click.argument("draw-id")
+def draw(ctx, tournament_id: str, draw_id: str):
+    """Draw subcommand."""
+    LOGGER.debug(
+        "Getting draw details for tournament '%s' and draw '%s'",
+        tournament_id,
+        draw_id,
+    )
+    try:
+        my_tsw: TSW = ctx.obj["my_tsw"]
+        print(json.dumps(my_tsw.get_draw(tournament_id, draw_id), indent=2))
+    except Exception as err:
+        LOGGER.error("A problem was found while getting draw: Error %s", err)
+
+
+@cli.command()
+@click.pass_context
 @click.argument("tournament_id")
 @click.argument("event_id")
 def draws(ctx, tournament_id, event_id):
@@ -72,7 +90,7 @@ def draws(ctx, tournament_id, event_id):
         event_id,
         tournament_id,
     )
-    my_tsw = ctx.obj["my_tsw"]
+    my_tsw: TSW = ctx.obj["my_tsw"]
     df = my_tsw.get_draws(tournament_id, event_id)
     print(tabulate(df, headers="keys", tablefmt="psql", showindex=False))
 
@@ -87,6 +105,18 @@ def events(ctx, tournament_id):
     my_tsw = ctx.obj["my_tsw"]
     df = my_tsw.get_events(tournament_id)
     print(tabulate(df, headers="keys", tablefmt="psql", showindex=False))
+
+
+@cli.command()
+@click.pass_context
+@click.argument("tournament_id")
+def tournament(ctx, tournament_id):
+    """Tournament Subcommand"""
+
+    my_tsw: TSW = ctx.obj["my_tsw"]
+    df = my_tsw.get_tournament_dates(tournament_id)
+    print(df)
+    # print(tabulate(df, headers="keys", tablefmt="psql", showindex=False))
 
 
 if __name__ == "__main__":

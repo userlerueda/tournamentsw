@@ -10,6 +10,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from tsw.util import (
+    calculate_match_date,
     dashed_score_to_score,
     get_country,
     get_parameters,
@@ -53,6 +54,34 @@ class TestUtilities:
         """
 
         assert parameters == get_parameters(url)
+
+    @pytest.mark.parametrize(
+        "match_details, match_date",
+        [
+            (
+                {
+                    "winner": "Juan Carlos Gaviria",
+                    "loser": "Marcela Sossa",
+                    "score": [[6, 2], [6, 1]],
+                    "draw_details": {
+                        "Round 1": {
+                            "matches": [
+                                ["Marcela Sossa", "Juan Carlos Gaviria"],
+                            ],
+                            "date": "2022-09-17T00:00:00.0000000",
+                        },
+                    },
+                },
+                "2022-09-17T00:00:00.0000000",
+            ),
+        ],
+    )
+    def test_calculate_match_date(self, match_details, match_date):
+        """
+        Test calculate_match_date
+        """
+
+        assert match_date == calculate_match_date(match_details)
 
     @pytest.mark.parametrize(
         "tsw_score, score",
